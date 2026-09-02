@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Calendar</title>
+    <title>Hong Kong Observation Wheel - Event Calendar</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="calendar-container">
+    <div class="container">
         <!-- Calendar Side -->
         <div class="calendar-section">
             <div class="calendar-header">
-                <h2 id="current-month">August 2026</h2>
+                <h2 id="current-month">September 2026</h2>
                 <div class="nav-buttons">
                     <button id="prev-month" class="nav-btn" aria-label="Previous month">
                         <svg viewBox="0 0 20 20" fill="currentColor">
@@ -27,20 +27,15 @@
             </div>
 
             <div class="calendar-grid">
-                <div class="day-header">S</div>
-                <div class="day-header">M</div>
-                <div class="day-header">T</div>
-                <div class="day-header">W</div>
-                <div class="day-header">T</div>
-                <div class="day-header">F</div>
-                <div class="day-header">S</div>
-                <div id="calendar-days"></div>
-            </div>
-
-            <div class="powered-by">
-                <a href="#" target="_blank" aria-label="Powered by">
-                    <span>⚡</span>
-                </a>
+                <div class="calendar-weekday">S</div>
+                <div class="calendar-weekday">M</div>
+                <div class="calendar-weekday">T</div>
+                <div class="calendar-weekday">W</div>
+                <div class="calendar-weekday">T</div>
+                <div class="calendar-weekday">F</div>
+                <div class="calendar-weekday">S</div>
+                <!-- Days will be inserted here by JavaScript -->
+                <div id="calendar-days" style="display: contents;"></div>
             </div>
         </div>
 
