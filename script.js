@@ -1,5 +1,5 @@
 // Configuration - Replace with your API endpoint
-const API_ENDPOINT = "/api/events"; // We'll create this next
+const API_ENDPOINT = "/api/events";
 
 // State
 let currentDate = new Date();
@@ -16,37 +16,20 @@ async function init() {
 // Fetch events from Google Sheets (via API)
 async function fetchEvents() {
   try {
-    // For now, use sample data
-    // We'll replace this with actual API call
-    events = getSampleEvents();
-
-    // Uncomment when API is ready:
-    // const response = await fetch(API_ENDPOINT);
-    // events = await response.json();
+    console.log('Fetching events from:', API_ENDPOINT);
+    const response = await fetch(API_ENDPOINT);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    events = await response.json();
+    console.log('Loaded events:', events.length);
+    console.log('Events:', events);
   } catch (error) {
     console.error("Error fetching events:", error);
     events = [];
   }
-}
-
-// Sample data (remove this when API is connected)
-function getSampleEvents() {
-  return [
-    {
-      id: 1,
-      title: "Hong Kong Observation Wheel",
-      date: "2026-08-21",
-      endDate: "2026-08-31",
-      startTime: "11:00 AM",
-      endTime: "11:00 PM",
-      description:
-        "Enjoy spectacular views of the Hong Kong Skyline\n享受香港天際線的壯麗景色",
-      imageUrl:
-        "https://via.placeholder.com/400x250/e03f62/ffffff?text=Event+Image",
-      ticketUrl: "#",
-      detailsUrl: "#",
-    },
-  ];
 }
 
 // Render calendar
@@ -114,8 +97,8 @@ function getEventDatesForMonth(year, month) {
   const rangeDates = new Set();
 
   events.forEach((event) => {
-    const eventStart = new Date(event.date);
-    const eventEnd = event.endDate ? new Date(event.endDate) : eventStart;
+    const eventStart = new Date(event.date + "T00:00:00");
+    const eventEnd = event.endDate ? new Date(event.endDate + "T00:00:00") : eventStart;
 
     // Check if event is in current month
     if (
@@ -158,6 +141,17 @@ function selectDate(dateStr) {
   selectedDate = dateStr;
   const date = new Date(dateStr + "T00:00:00");
 
+  // Remove previous selection
+  document.querySelectorAll('.calendar-day.selected').forEach(el => {
+    el.classList.remove('selected');
+  });
+
+  // Add selected class to clicked date
+  const clickedDay = document.querySelector(`[data-date="${dateStr}"]`);
+  if (clickedDay) {
+    clickedDay.classList.add('selected');
+  }
+
   // Update header
   document.getElementById("selected-date").textContent =
     date.toLocaleDateString("en-US", {
@@ -166,12 +160,16 @@ function selectDate(dateStr) {
       day: "numeric",
     });
 
+  console.log('Selected date:', dateStr);
+
   // Filter events for this date
   const dayEvents = events.filter((event) => {
-    const eventStart = new Date(event.date);
-    const eventEnd = event.endDate ? new Date(event.endDate) : eventStart;
-    return date >= eventStart && date <= eventEnd;
+    const isMatch = event.date === dateStr || 
+                    (event.endDate && dateStr >= event.date && dateStr <= event.endDate);
+    return isMatch;
   });
+
+  console.log('Day events found:', dayEvents);
 
   // Render events
   renderEvents(dayEvents);
@@ -196,8 +194,8 @@ function renderEvents(dayEvents) {
             <p class="event-time">${event.startTime} - ${event.endTime}</p>
             <p class="event-description">${event.description}</p>
             <div class="event-buttons">
+                ${event.isFree ? '<span class="free-badge">FREE</span>' : ''}
                 ${event.ticketUrl ? `<a href="${event.ticketUrl}" class="event-btn event-btn-primary" target="_blank">Get Tickets</a>` : ""}
-                ${event.detailsUrl ? `<a href="${event.detailsUrl}" class="event-btn event-btn-secondary" target="_blank">View Details</a>` : ""}
             </div>
         </div>
     `,
