@@ -251,22 +251,6 @@ body {
   font-size: 16px;
 }
 
-/* Responsive Design */
-@media (max-width: 968px) {
-  .container {
-    grid-template-columns: 1fr;
-  }
-
-  .calendar-section {
-    border-right: none;
-    border-bottom: 1px solid #e0e0e0;
-    max-height: none;
-  }
-
-  .events-section {
-    max-height: none;
-  }
-}
 
 @media (max-width: 640px) {
   body {
