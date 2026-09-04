@@ -167,7 +167,7 @@ function renderEvents(dayEvents) {
 
   eventsContainer.innerHTML = dayEvents
     .map(
-      (event) => `
+      (event, index) => `
         <div class="event-card">
             ${event.imageUrl ? `<img src="${event.imageUrl}" alt="${event.title}" class="event-image">` : ""}
             <h3>${event.title}</h3>
@@ -176,7 +176,7 @@ function renderEvents(dayEvents) {
             <div class="event-buttons">
                 ${event.isFree ? '<span class="free-badge">FREE</span>' : ''}
                 ${event.eventbriteId ? 
-                  `<button class="event-btn event-btn-primary" data-eventbrite-id="${event.eventbriteId}">Get Tickets</button>` 
+                  `<button id="eventbrite-widget-modal-trigger-${event.eventbriteId}" class="event-btn event-btn-primary" data-eventbrite-id="${event.eventbriteId}">Get Tickets</button>` 
                   : event.ticketUrl ? 
                   `<a href="${event.ticketUrl}" class="event-btn event-btn-primary" target="_blank">Get Tickets</a>` 
                   : ""}
@@ -190,19 +190,21 @@ function renderEvents(dayEvents) {
   document.querySelectorAll('[data-eventbrite-id]').forEach(button => {
     button.addEventListener('click', function() {
       const eventbriteId = this.getAttribute('data-eventbrite-id');
-      openEventbriteCheckout(eventbriteId);
+      const buttonId = this.id;
+      openEventbriteCheckout(eventbriteId, buttonId);
     });
   });
 }
 
-function openEventbriteCheckout(eventbriteId) {
+function openEventbriteCheckout(eventbriteId, buttonId) {
   console.log('Opening Eventbrite checkout for:', eventbriteId);
+  console.log('Button ID:', buttonId);
   console.log('EBWidgets available:', !!window.EBWidgets);
   
   if (!window.EBWidgets) {
     console.error('Eventbrite widget not loaded');
     // Fallback to direct link
-    window.open(`https://www.eventbrite.hk/e/event-${eventbriteId}`, '_blank');
+    window.open(`https://www.eventbrite.com/e/${eventbriteId}`, '_blank');
     return;
   }
 
@@ -211,6 +213,7 @@ function openEventbriteCheckout(eventbriteId) {
       widgetType: 'checkout',
       eventId: eventbriteId,
       modal: true,
+      modalTriggerElementId: buttonId,
       onOrderComplete: function() {
         console.log('Order completed!');
       }
@@ -218,7 +221,7 @@ function openEventbriteCheckout(eventbriteId) {
   } catch (error) {
     console.error('Error creating widget:', error);
     // Fallback to direct link
-    window.open(`https://www.eventbrite.hk/e/event-${eventbriteId}`, '_blank');
+    window.open(`https://www.eventbrite.com/e/${eventbriteId}`, '_blank');
   }
 }
 
