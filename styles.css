@@ -14,12 +14,13 @@ body {
   max-width: 1400px;
   margin: 0 auto;
   background: white;
-  border-radius: 0; /* Changed from 20px */
+  border-radius: 0;
   overflow: hidden;
-  box-shadow: none; /* Changed from 0 20px 60px rgba(0, 0, 0, 0.3) */
+  box-shadow: none;
   display: grid;
-  grid-template-columns: 400px 1fr;
+  grid-template-columns: 1fr 1fr; /* Equal columns instead of 400px 1fr */
   min-height: 600px;
+  height: 600px; /* Fixed height */
 }
 
 /* Calendar Section */
@@ -27,8 +28,17 @@ body {
   background: #f8f9fa;
   padding: 2rem;
   border-right: 1px solid #e0e0e0;
-  overflow-y: auto;
-  max-height: calc(100vh - 4rem);
+  overflow-y: visible; /* Changed from auto */
+  max-height: none; /* Remove max-height restriction */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Events Section */
+.events-section {
+  padding: 2rem;
+  overflow-y: auto; /* Keep scroll only on events side */
+  max-height: 600px; /* Match container height */
 }
 
 .calendar-header {
