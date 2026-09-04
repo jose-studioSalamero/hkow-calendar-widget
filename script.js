@@ -176,7 +176,7 @@ function renderEvents(dayEvents) {
             <div class="event-buttons">
                 ${event.isFree ? '<span class="free-badge">FREE</span>' : ''}
                 ${event.eventbriteId ? 
-                  `<button id="eventbrite-widget-modal-trigger-${event.eventbriteId}" class="event-btn event-btn-primary" data-eventbrite-id="${event.eventbriteId}">Get Tickets</button>` 
+                  `<button class="event-btn event-btn-primary" data-eventbrite-id="${event.eventbriteId}">Get Tickets</button>` 
                   : event.ticketUrl ? 
                   `<a href="${event.ticketUrl}" class="event-btn event-btn-primary" target="_blank">Get Tickets</a>` 
                   : ""}
@@ -190,37 +190,22 @@ function renderEvents(dayEvents) {
   document.querySelectorAll('[data-eventbrite-id]').forEach(button => {
     button.addEventListener('click', function() {
       const eventbriteId = this.getAttribute('data-eventbrite-id');
-      const buttonId = this.id;
-      openEventbriteCheckout(eventbriteId, buttonId);
+      openEventbriteCheckout(eventbriteId);
     });
   });
 }
 
-function openEventbriteCheckout(eventbriteId, buttonId) {
-  console.log('Opening Eventbrite checkout for:', eventbriteId);
-  console.log('Button ID:', buttonId);
-  console.log('EBWidgets available:', !!window.EBWidgets);
+function openEventbriteCheckout(eventbriteId) {
+  console.log('Sending message to parent window for Eventbrite ID:', eventbriteId);
   
-  if (!window.EBWidgets) {
-    console.error('Eventbrite widget not loaded');
-    // Fallback to direct link
-    window.open(`https://www.eventbrite.com/e/${eventbriteId}`, '_blank');
-    return;
-  }
-
-  try {
-    window.EBWidgets.createWidget({
-      widgetType: 'checkout',
-      eventId: eventbriteId,
-      modal: true,
-      modalTriggerElementId: buttonId,
-      onOrderComplete: function() {
-        console.log('Order completed!');
-      }
-    });
-  } catch (error) {
-    console.error('Error creating widget:', error);
-    // Fallback to direct link
+  // Send message to parent window (Webflow site)
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({
+      type: 'OPEN_EVENTBRITE_MODAL',
+      eventbriteId: eventbriteId
+    }, '*');
+  } else {
+    // Fallback if not in iframe
     window.open(`https://www.eventbrite.com/e/${eventbriteId}`, '_blank');
   }
 }
