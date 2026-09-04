@@ -1,7 +1,6 @@
 const { google } = require('googleapis');
 
 export default async function handler(req, res) {
-  // Enable CORS first
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   
@@ -10,10 +9,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Parse credentials
     const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
     
-    // Create auth client
     const auth = new google.auth.GoogleAuth({
       credentials: credentials,
       scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
@@ -24,7 +21,6 @@ export default async function handler(req, res) {
     
     const spreadsheetId = '1fymh7kY8cme4rYP3Tb7g1YzzxnJI2pc9o9dXHTPCGfU';
     
-    // Fetch data with timeout protection
     const response = await Promise.race([
       sheets.spreadsheets.values.get({
         spreadsheetId: spreadsheetId,
@@ -37,7 +33,6 @@ export default async function handler(req, res) {
 
     const rows = response.data.values || [];
     
-    // Filter and transform events
     const events = rows
       .filter(row => row[2] === 'Hong Kong Observation Wheel' && row[3] === 'live')
       .map(row => {
@@ -46,6 +41,7 @@ export default async function handler(req, res) {
         
         return {
           id: row[0],
+          eventbriteId: row[0],
           title: row[2],
           date: row[5]?.split('T')[0],
           endDate: row[6]?.split('T')[0],

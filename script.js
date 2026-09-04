@@ -195,12 +195,35 @@ function renderEvents(dayEvents) {
             <p class="event-description">${event.description}</p>
             <div class="event-buttons">
                 ${event.isFree ? '<span class="free-badge">FREE</span>' : ''}
-                ${event.ticketUrl ? `<a href="${event.ticketUrl}" class="event-btn event-btn-primary" target="_blank">Get Tickets</a>` : ""}
+                ${event.eventbriteId ? 
+                  `<button class="event-btn event-btn-primary" onclick="openEventbriteCheckout('${event.eventbriteId}')">Get Tickets</button>` 
+                  : event.ticketUrl ? 
+                  `<a href="${event.ticketUrl}" class="event-btn event-btn-primary" target="_blank">Get Tickets</a>` 
+                  : ""}
             </div>
         </div>
     `,
     )
     .join("");
+}
+
+// Open Eventbrite checkout modal
+function openEventbriteCheckout(eventbriteId) {
+  if (!window.EBWidgets) {
+    console.error('Eventbrite widget not loaded');
+    alert('Unable to load checkout. Please try again.');
+    return;
+  }
+
+  window.EBWidgets.createWidget({
+    widgetType: 'checkout',
+    eventId: eventbriteId,
+    modal: true,
+    modalTriggerElementId: null,
+    onOrderComplete: function() {
+      console.log('Order completed!');
+    }
+  });
 }
 
 // Setup event listeners
