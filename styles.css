@@ -14,9 +14,9 @@ body {
   max-width: 1400px;
   margin: 0 auto;
   background: white;
-  border-radius: 20px;
+  border-radius: 0; /* Changed from 20px */
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: none; /* Changed from 0 20px 60px rgba(0, 0, 0, 0.3) */
   display: grid;
   grid-template-columns: 400px 1fr;
   min-height: 600px;
