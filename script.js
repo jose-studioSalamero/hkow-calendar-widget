@@ -6,11 +6,19 @@ let currentDate = new Date();
 let events = [];
 let selectedDate = null;
 
+function toDateKey(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 // Initialize
 async function init() {
   await fetchEvents();
   renderCalendar();
   setupEventListeners();
+  selectDate(toDateKey(new Date()));
 }
 
 // Fetch events from Google Sheets (via API)
@@ -74,6 +82,10 @@ function renderCalendar() {
       day === today.getDate()
     ) {
       dayEl.classList.add("today");
+    }
+
+    if (dateStr === selectedDate) {
+      dayEl.classList.add("selected");
     }
 
     dayEl.addEventListener("click", () => selectDate(dateStr));
