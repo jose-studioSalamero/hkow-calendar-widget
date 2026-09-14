@@ -13,6 +13,12 @@ function toDateKey(date) {
   return `${year}-${month}-${day}`;
 }
 
+// Helper function to create local date from YYYY-MM-DD string
+function parseLocalDate(dateStr) {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 // Initialize
 async function init() {
   await fetchEvents();
@@ -62,6 +68,10 @@ function renderCalendar() {
     daysContainer.appendChild(emptyDay);
   }
 
+  // Get today's date in local timezone
+  const today = new Date();
+  const todayStr = toDateKey(today);
+
   for (let day = 1; day <= daysInMonth; day++) {
     const dayEl = document.createElement("div");
     dayEl.className = "calendar-day";
@@ -75,12 +85,8 @@ function renderCalendar() {
       dayEl.classList.add("has-event-range");
     }
 
-    const today = new Date();
-    if (
-      year === today.getFullYear() &&
-      month === today.getMonth() &&
-      day === today.getDate()
-    ) {
+    // Compare date strings instead of date objects
+    if (dateStr === todayStr) {
       dayEl.classList.add("today");
     }
 
@@ -99,8 +105,8 @@ function getEventDatesForMonth(year, month) {
   const rangeDates = new Set();
 
   events.forEach((event) => {
-    const eventStart = new Date(event.date + "T00:00:00");
-    const eventEnd = event.endDate ? new Date(event.endDate + "T00:00:00") : eventStart;
+    const eventStart = parseLocalDate(event.date);
+    const eventEnd = event.endDate ? parseLocalDate(event.endDate) : eventStart;
 
     if (
       (eventStart.getFullYear() === year && eventStart.getMonth() === month) ||
@@ -123,7 +129,7 @@ function getEventDatesForMonth(year, month) {
       );
 
       while (currentDate <= endDate) {
-        const dateStr = currentDate.toISOString().split("T")[0];
+        const dateStr = toDateKey(currentDate);
         if (dateStr !== event.date) {
           rangeDates.add(dateStr);
         }
@@ -137,7 +143,7 @@ function getEventDatesForMonth(year, month) {
 
 function selectDate(dateStr) {
   selectedDate = dateStr;
-  const date = new Date(dateStr + "T00:00:00");
+  const date = parseLocalDate(dateStr);
 
   document.querySelectorAll('.calendar-day.selected').forEach(el => {
     el.classList.remove('selected');
