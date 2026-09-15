@@ -106,13 +106,9 @@ body {
   background-color: #f3f4f6;
 }
 
-.calendar-day.empty {
-  cursor: default;
-}
-
+.calendar-day.empty,
 .calendar-day.past {
   cursor: default;
-  color: #9ca3af;
   pointer-events: none;
 }
 
