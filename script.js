@@ -1,15 +1,18 @@
 // Configuration - Replace with your API endpoint
 const API_ENDPOINT = "/api/events";
 
-// Hong Kong time is UTC+8 year-round (no DST).
-const HKT_OFFSET_MS = 8 * 60 * 60 * 1000;
-const MAX_TIMEOUT_MS = 2147483647;
+function getHKTDateKey(date = new Date()) {
+  return date.toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
+}
+
+// Today's civil date in Hong Kong time, captured when the page loads.
+const todayHKT = getHKTDateKey();
+const [todayYear, todayMonth] = todayHKT.split("-").map(Number);
 
 // State
-let currentDate = getHKTMonthDate();
+let currentDate = new Date(todayYear, todayMonth - 1, 1);
 let events = [];
 let selectedDate = null;
-let activeStateTimer = null;
 
 function toDateKey(date) {
   const year = date.getFullYear();
@@ -18,177 +21,14 @@ function toDateKey(date) {
   return `${year}-${month}-${day}`;
 }
 
-// Instant in UTC shifted so UTC getters return HKT calendar/clock fields.
-function asHKT(date = new Date()) {
-  return new Date(date.getTime() + HKT_OFFSET_MS);
-}
-
-function getHKTDateKey(date = new Date()) {
-  const hkt = asHKT(date);
-  const year = hkt.getUTCFullYear();
-  const month = String(hkt.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(hkt.getUTCDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function getHKTMonthDate(date = new Date()) {
-  const [year, month] = getHKTDateKey(date).split("-").map(Number);
-  return new Date(year, month - 1, 1);
-}
-
-function getNextHKTMidnightMs(date = new Date()) {
-  const hkt = asHKT(date);
-  const nextMidnightHKTAsUTC = Date.UTC(
-    hkt.getUTCFullYear(),
-    hkt.getUTCMonth(),
-    hkt.getUTCDate() + 1,
-    0,
-    0,
-    0,
-    0,
-  );
-  return nextMidnightHKTAsUTC - HKT_OFFSET_MS;
-}
-
-function parseHKTDisplayTimeToMs(dateStr, timeStr) {
-  if (!dateStr || !timeStr) {
-    return NaN;
-  }
-
-  const match = String(timeStr)
-    .trim()
-    .match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-  if (!match) {
-    return NaN;
-  }
-
-  let hour = Number(match[1]);
-  const minute = Number(match[2]);
-  const ampm = match[3].toUpperCase();
-  if (ampm === "AM") {
-    if (hour === 12) {
-      hour = 0;
-    }
-  } else if (hour !== 12) {
-    hour += 12;
-  }
-
-  const [year, month, day] = dateStr.split("-").map(Number);
-  return Date.UTC(year, month - 1, day, hour, minute, 0, 0) - HKT_OFFSET_MS;
-}
-
-function parseEventEndMs(event) {
-  if (event.endDateTime) {
-    const endMs = Date.parse(event.endDateTime);
-    if (!Number.isNaN(endMs)) {
-      return endMs;
-    }
-  }
-
-  const lastDate = event.endDate || event.date;
-  const fromDisplayTime = parseHKTDisplayTimeToMs(lastDate, event.endTime);
-  if (!Number.isNaN(fromDisplayTime)) {
-    return fromDisplayTime;
-  }
-
-  if (!lastDate) {
-    return NaN;
-  }
-
-  const [year, month, day] = lastDate.split("-").map(Number);
-  return Date.UTC(year, month - 1, day + 1, 0, 0, 0, 0) - HKT_OFFSET_MS;
-}
-
-function hasEventEnded(event, now = new Date()) {
-  const endMs = parseEventEndMs(event);
-  if (Number.isNaN(endMs)) {
-    return false;
-  }
-  return endMs <= now.getTime();
-}
-
-function eventCoversDate(event, dateStr) {
-  if (event.date === dateStr) {
-    return true;
-  }
-  return Boolean(
-    event.endDate && dateStr >= event.date && dateStr <= event.endDate,
-  );
-}
-
-function hasActiveEventOnDate(dateStr, now = new Date(), eventList = events) {
-  const todayStr = getHKTDateKey(now);
-  if (dateStr < todayStr) {
-    return false;
-  }
-
-  return eventList.some(
-    (event) => eventCoversDate(event, dateStr) && !hasEventEnded(event, now),
-  );
-}
-
 // Helper function to create local date from YYYY-MM-DD string
 function parseLocalDate(dateStr) {
   const [year, month, day] = dateStr.split("-").map(Number);
   return new Date(year, month - 1, day);
 }
 
-function isPastHKTDate(dateStr, now = new Date()) {
-  return dateStr < getHKTDateKey(now);
-}
-
-function refreshActiveCalendarState() {
-  const todayStr = getHKTDateKey();
-  if (selectedDate && isPastHKTDate(selectedDate)) {
-    selectedDate = todayStr;
-  }
-  renderCalendar();
-  if (selectedDate) {
-    selectDate(selectedDate);
-  }
-  scheduleActiveStateRefresh();
-}
-
-function getMsUntilNextActiveStateChange(now = new Date(), eventList = events) {
-  const nowMs = now.getTime();
-  let nextMs = getNextHKTMidnightMs(now);
-  const todayStr = getHKTDateKey(now);
-
-  eventList.forEach((event) => {
-    const endMs = parseEventEndMs(event);
-    if (Number.isNaN(endMs) || endMs <= nowMs || endMs >= nextMs) {
-      return;
-    }
-
-    const lastDate = event.endDate || event.date;
-    if (lastDate === todayStr) {
-      nextMs = endMs;
-    }
-  });
-
-  return Math.min(Math.max(nextMs - nowMs + 50, 50), MAX_TIMEOUT_MS);
-}
-
-function scheduleActiveStateRefresh() {
-  if (activeStateTimer) {
-    clearTimeout(activeStateTimer);
-    activeStateTimer = null;
-  }
-
-  activeStateTimer = setTimeout(
-    refreshActiveCalendarState,
-    getMsUntilNextActiveStateChange(),
-  );
-}
-
-function setupRealtimeRefresh() {
-  scheduleActiveStateRefresh();
-
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") {
-      refreshActiveCalendarState();
-    }
-  });
+function isPastDate(dateStr) {
+  return dateStr < todayHKT;
 }
 
 // Initialize
@@ -196,8 +36,7 @@ async function init() {
   await fetchEvents();
   renderCalendar();
   setupEventListeners();
-  selectDate(getHKTDateKey());
-  setupRealtimeRefresh();
+  selectDate(todayHKT);
 }
 
 // Fetch events from Google Sheets (via API)
@@ -241,9 +80,6 @@ function renderCalendar() {
     daysContainer.appendChild(emptyDay);
   }
 
-  const now = new Date();
-  const todayStr = getHKTDateKey(now);
-
   for (let day = 1; day <= daysInMonth; day++) {
     const dayEl = document.createElement("div");
     dayEl.className = "calendar-day";
@@ -251,7 +87,9 @@ function renderCalendar() {
     dayEl.dataset.date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
     const dateStr = dayEl.dataset.date;
-    if (hasActiveEventOnDate(dateStr, now, events)) {
+    const isPast = isPastDate(dateStr);
+
+    if (!isPast) {
       if (eventDates.start.has(dateStr)) {
         dayEl.classList.add("has-event");
       } else if (eventDates.range.has(dateStr)) {
@@ -259,11 +97,11 @@ function renderCalendar() {
       }
     }
 
-    if (dateStr === todayStr) {
+    if (dateStr === todayHKT) {
       dayEl.classList.add("today");
     }
 
-    if (isPastHKTDate(dateStr, now)) {
+    if (isPast) {
       dayEl.classList.add("past");
       dayEl.setAttribute("aria-disabled", "true");
     } else {
@@ -319,7 +157,7 @@ function getEventDatesForMonth(year, month) {
 }
 
 function selectDate(dateStr) {
-  if (isPastHKTDate(dateStr)) {
+  if (isPastDate(dateStr)) {
     return;
   }
 
@@ -376,13 +214,11 @@ function renderEvents(dayEvents) {
             <div class="event-buttons">
                 ${event.isFree ? '<span class="free-badge">FREE</span>' : ""}
                 ${
-                  hasEventEnded(event)
-                    ? '<span class="ended-badge">Ended</span>'
-                    : event.eventbriteId
-                      ? `<button class="event-btn event-btn-primary" data-eventbrite-id="${event.eventbriteId}">Get Tickets</button>`
-                      : event.ticketUrl
-                        ? `<a href="${event.ticketUrl}" class="event-btn event-btn-primary" target="_blank">Get Tickets</a>`
-                        : ""
+                  event.eventbriteId
+                    ? `<button class="event-btn event-btn-primary" data-eventbrite-id="${event.eventbriteId}">Get Tickets</button>`
+                    : event.ticketUrl
+                      ? `<a href="${event.ticketUrl}" class="event-btn event-btn-primary" target="_blank">Get Tickets</a>`
+                      : ""
                 }
             </div>
         </div>
@@ -432,21 +268,4 @@ function setupEventListeners() {
   });
 }
 
-if (typeof document !== "undefined") {
-  init();
-}
-
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = {
-    isPastHKTDate,
-    getHKTDateKey,
-    getNextHKTMidnightMs,
-    hasEventEnded,
-    hasActiveEventOnDate,
-    eventCoversDate,
-    parseEventEndMs,
-    parseHKTDisplayTimeToMs,
-    getMsUntilNextActiveStateChange,
-    asHKT,
-  };
-}
+init();
