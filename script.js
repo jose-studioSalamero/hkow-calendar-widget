@@ -133,7 +133,15 @@ function parseLocalDate(dateStr) {
   return new Date(year, month - 1, day);
 }
 
+function isPastHKTDate(dateStr, now = new Date()) {
+  return dateStr < getHKTDateKey(now);
+}
+
 function refreshActiveCalendarState() {
+  const todayStr = getHKTDateKey();
+  if (selectedDate && isPastHKTDate(selectedDate)) {
+    selectedDate = todayStr;
+  }
   renderCalendar();
   if (selectedDate) {
     selectDate(selectedDate);
@@ -255,11 +263,15 @@ function renderCalendar() {
       dayEl.classList.add("today");
     }
 
-    if (dateStr === selectedDate) {
-      dayEl.classList.add("selected");
+    if (isPastHKTDate(dateStr, now)) {
+      dayEl.classList.add("past");
+      dayEl.setAttribute("aria-disabled", "true");
+    } else {
+      if (dateStr === selectedDate) {
+        dayEl.classList.add("selected");
+      }
+      dayEl.addEventListener("click", () => selectDate(dateStr));
     }
-
-    dayEl.addEventListener("click", () => selectDate(dateStr));
 
     daysContainer.appendChild(dayEl);
   }
@@ -307,6 +319,10 @@ function getEventDatesForMonth(year, month) {
 }
 
 function selectDate(dateStr) {
+  if (isPastHKTDate(dateStr)) {
+    return;
+  }
+
   selectedDate = dateStr;
   const date = parseLocalDate(dateStr);
 
@@ -422,6 +438,7 @@ if (typeof document !== "undefined") {
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
+    isPastHKTDate,
     getHKTDateKey,
     getNextHKTMidnightMs,
     hasEventEnded,

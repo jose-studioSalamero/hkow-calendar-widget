@@ -110,6 +110,16 @@ body {
   cursor: default;
 }
 
+.calendar-day.past {
+  cursor: default;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.calendar-day.past:hover {
+  background-color: transparent;
+}
+
 .calendar-day.today {
   border: 2px solid #e7004a;
 }
