@@ -106,8 +106,14 @@ body {
   background-color: #f3f4f6;
 }
 
-.calendar-day.empty {
+.calendar-day.empty,
+.calendar-day.past {
   cursor: default;
+  pointer-events: none;
+}
+
+.calendar-day.past:hover {
+  background-color: transparent;
 }
 
 .calendar-day.today {
