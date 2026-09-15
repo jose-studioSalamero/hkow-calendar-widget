@@ -36,27 +36,31 @@ export default async function handler(req, res) {
     const events = rows
       .filter(row => row[2] === 'Hong Kong Observation Wheel' && row[3] === 'live')
       .map(row => {
-        const startDateTime = new Date(row[5]);
-        const endDateTime = new Date(row[6]);
-        
+        const startDateTime = row[5] ? new Date(row[5]) : null;
+        const endDateTime = row[6] ? new Date(row[6]) : startDateTime;
+        const startValid = startDateTime instanceof Date && !Number.isNaN(startDateTime.getTime());
+        const endValid = endDateTime instanceof Date && !Number.isNaN(endDateTime.getTime());
+
+        const hktDate = (date) =>
+          date.toLocaleDateString('en-CA', { timeZone: 'Asia/Hong_Kong' });
+        const hktTime = (date) =>
+          date.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+            timeZone: 'Asia/Hong_Kong',
+          });
+
         return {
           id: row[0],
           eventbriteId: row[0],
           title: row[2],
-          date: row[5]?.split('T')[0],
-          endDate: row[6]?.split('T')[0],
-          startTime: startDateTime.toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-            timeZone: 'Asia/Hong_Kong'
-          }),
-          endTime: endDateTime.toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-            timeZone: 'Asia/Hong_Kong'
-          }),
+          date: startValid ? hktDate(startDateTime) : row[5]?.split('T')[0],
+          endDate: endValid ? hktDate(endDateTime) : row[6]?.split('T')[0],
+          startDateTime: startValid ? startDateTime.toISOString() : '',
+          endDateTime: endValid ? endDateTime.toISOString() : '',
+          startTime: startValid ? hktTime(startDateTime) : '',
+          endTime: endValid ? hktTime(endDateTime) : '',
           description: row[9] || '',
           imageUrl: row[10] || '',
           ticketUrl: row[11] || '',
