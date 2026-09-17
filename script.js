@@ -1,16 +1,24 @@
 // Configuration - Replace with your API endpoint
 const API_ENDPOINT = "/api/events";
 
+// Hong Kong is UTC+8 year-round (no DST).
+const HKT_OFFSET_MS = 8 * 60 * 60 * 1000;
+
 function getHKTDateKey(date = new Date()) {
-  return date.toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
+  const hkt = new Date(date.getTime() + HKT_OFFSET_MS);
+  const year = hkt.getUTCFullYear();
+  const month = String(hkt.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(hkt.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
-// Today's civil date in Hong Kong time, captured when the page loads.
-const todayHKT = getHKTDateKey();
-const [todayYear, todayMonth] = todayHKT.split("-").map(Number);
+function getHKTMonthDate(date = new Date()) {
+  const [year, month] = getHKTDateKey(date).split("-").map(Number);
+  return new Date(year, month - 1, 1);
+}
 
 // State
-let currentDate = new Date(todayYear, todayMonth - 1, 1);
+let currentDate = getHKTMonthDate();
 let events = [];
 let selectedDate = null;
 
@@ -27,8 +35,8 @@ function parseLocalDate(dateStr) {
   return new Date(year, month - 1, day);
 }
 
-function isPastDate(dateStr) {
-  return dateStr < todayHKT;
+function isPastDate(dateStr, todayStr = getHKTDateKey()) {
+  return dateStr < todayStr;
 }
 
 // Initialize
@@ -36,7 +44,7 @@ async function init() {
   await fetchEvents();
   renderCalendar();
   setupEventListeners();
-  selectDate(todayHKT);
+  selectDate(getHKTDateKey());
 }
 
 // Fetch events from Google Sheets (via API)
@@ -80,6 +88,8 @@ function renderCalendar() {
     daysContainer.appendChild(emptyDay);
   }
 
+  const todayStr = getHKTDateKey();
+
   for (let day = 1; day <= daysInMonth; day++) {
     const dayEl = document.createElement("div");
     dayEl.className = "calendar-day";
@@ -87,7 +97,7 @@ function renderCalendar() {
     dayEl.dataset.date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
     const dateStr = dayEl.dataset.date;
-    const isPast = isPastDate(dateStr);
+    const isPast = isPastDate(dateStr, todayStr);
 
     if (!isPast) {
       if (eventDates.start.has(dateStr)) {
@@ -97,7 +107,7 @@ function renderCalendar() {
       }
     }
 
-    if (dateStr === todayHKT) {
+    if (dateStr === todayStr) {
       dayEl.classList.add("today");
     }
 
