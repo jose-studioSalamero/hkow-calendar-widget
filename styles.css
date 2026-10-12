@@ -154,27 +154,33 @@ body {
 
 /* ===== Today ===== */
 .calendar-day.today {
-  background: #fff;
-  color: #E70042;
-  font-family: "Inter Tight", sans-serif;
-  font-size: 1rem;
-  font-style: normal;
+  background-color: #fff;
+  color: rgb(231, 0, 66);
   font-weight: 500;
-  line-height: normal;
-  text-transform: uppercase;
+  border-radius: 0;
+}
+
+/* ===== Dates with an event (unselected) ===== */
+.calendar-day.has-event {
+  background-color: #fff;
+  color: #000;
+  font-weight: 500;
+  border-radius: 0;
+}
+
+.calendar-day.has-event:hover {
+  background-color: rgba(0, 0, 0, 0.04);
 }
 
 /* ===== Selected date (filled square) ===== */
-.calendar-day.selected,
-.calendar-day.has-event {
-  background-color: #E70042;
+.calendar-day.selected {
+  background-color: rgb(231, 0, 66);
   color: #FFF;
   font-weight: 500;
   border-radius: 0;
 }
 
-.calendar-day.selected:hover,
-.calendar-day.has-event:hover {
+.calendar-day.selected:hover {
   background-color: #b8325d;
 }
 
