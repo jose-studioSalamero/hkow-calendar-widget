@@ -76,6 +76,33 @@ body {
   height: 20px;
 }
 
+/* ===== Calendar Grid — dotted dividers instead of gaps ===== */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0;
+}
+
+.calendar-weekday,
+.calendar-day {
+  border-right: 1px dotted rgba(0, 0, 0, 0.10);
+  border-bottom: 1px dotted rgba(0, 0, 0, 0.10);
+}
+
+.calendar-weekday:nth-child(7n),
+.calendar-day:nth-child(7n) {
+  border-right: none;
+}
+
+.calendar-weekday {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #9ca3af;
+  padding: 8px 0;
+  border-bottom: 1px dotted rgba(0, 0, 0, 0.10);
+}
+
 /* ===== Base day cell (future dates) ===== */
 .calendar-day {
   aspect-ratio: 1;
