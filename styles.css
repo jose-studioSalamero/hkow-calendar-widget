@@ -76,34 +76,7 @@ body {
   height: 20px;
 }
 
-/* ===== Calendar Grid — dotted dividers instead of gaps ===== */
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0;
-}
-
-.calendar-weekday,
-.calendar-day {
-  border-right: 1px dotted rgba(0, 0, 0, 0.10);
-  border-bottom: 1px dotted rgba(0, 0, 0, 0.10);
-}
-
-.calendar-weekday:nth-child(7n),
-.calendar-day:nth-child(7n) {
-  border-right: none;
-}
-
-.calendar-weekday {
-  text-align: center;
-  font-size: 12px;
-  font-weight: 600;
-  color: #9ca3af;
-  padding: 8px 0;
-  border-bottom: 1px dotted rgba(0, 0, 0, 0.10);
-}
-
-/* ===== Base day cell (Selectable dates) ===== */
+/* ===== Base day cell (future dates) ===== */
 .calendar-day {
   aspect-ratio: 1;
   display: flex;
@@ -112,14 +85,14 @@ body {
   cursor: pointer;
   position: relative;
   background: rgba(255, 255, 255, 0.50);
-  color: #000;
+  color: #000; /* future dates: black */
   font-family: "Inter Tight", sans-serif;
   font-size: 1rem;
   font-weight: 500;
   font-style: normal;
   line-height: normal;
   text-transform: uppercase;
-  border-radius: 0; /* no rounding, ever */
+  border-radius: 0;
   transition: background-color 0.2s;
 }
 
@@ -127,16 +100,41 @@ body {
   background-color: rgba(0, 0, 0, 0.04);
 }
 
-.calendar-day.empty,
-.calendar-day.past {
+.calendar-day.empty {
   cursor: default;
+  background: transparent;
+}
+
+/* ===== Past dates — unclickable ===== */
+.calendar-day.past-day {
+  cursor: default;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.50);
+  color: #7A7A7A;
+  font-family: "Inter Tight", sans-serif;
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  text-transform: uppercase;
+}
+
+/* no hover state needed since pointer-events: none,
+   but keeping background consistent just in case */
+.calendar-day.past-day:hover {
+  background: rgba(255, 255, 255, 0.50);
 }
 
 /* ===== Today ===== */
 .calendar-day.today {
-  background: transparent;
+  background: #fff;
   color: #E70042;
+  font-family: "Inter Tight", sans-serif;
+  font-size: 1rem;
+  font-style: normal;
   font-weight: 500;
+  line-height: normal;
+  text-transform: uppercase;
 }
 
 /* ===== Selected date (filled square) ===== */
@@ -157,6 +155,15 @@ body {
   background-color: #fecdd3;
   color: #be123c;
   border-radius: 0;
+}
+
+/* Past dates always render muted, even if they have events */
+.calendar-day.past-day.has-event,
+.calendar-day.past-day.has-event-range {
+  background: rgba(255, 255, 255, 0.50);
+  color: #7A7A7A;
+  cursor: default;
+  pointer-events: none;
 }
 
 /* Events Section */

@@ -88,34 +88,41 @@ function renderCalendar() {
     daysContainer.appendChild(emptyDay);
   }
 
-  const todayStr = getHKTDateKey();
+const todayStr = getHKTDateKey();
 
-  for (let day = 1; day <= daysInMonth; day++) {
-    const dayEl = document.createElement("div");
-    dayEl.className = "calendar-day";
-    dayEl.textContent = day;
-    dayEl.dataset.date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+for (let day = 1; day <= daysInMonth; day++) {
+  const dayEl = document.createElement("div");
+  dayEl.className = "calendar-day";
+  dayEl.textContent = day;
+  dayEl.dataset.date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
-    const dateStr = dayEl.dataset.date;
-    if (eventDates.start.has(dateStr)) {
-      dayEl.classList.add("has-event");
-    } else if (eventDates.range.has(dateStr)) {
-      dayEl.classList.add("has-event-range");
-    }
+  const dateStr = dayEl.dataset.date;
+  const isPast = isPastDate(dateStr, todayStr);
 
-    // Compare date strings instead of date objects
-    if (dateStr === todayStr) {
-      dayEl.classList.add("today");
-    }
-
-    if (dateStr === selectedDate) {
-      dayEl.classList.add("selected");
-    }
-
-    dayEl.addEventListener("click", () => selectDate(dateStr));
-
-    daysContainer.appendChild(dayEl);
+  if (eventDates.start.has(dateStr)) {
+    dayEl.classList.add("has-event");
+  } else if (eventDates.range.has(dateStr)) {
+    dayEl.classList.add("has-event-range");
   }
+
+  // Compare date strings instead of date objects
+  if (dateStr === todayStr) {
+    dayEl.classList.add("today");
+  } else if (isPast) {
+    dayEl.classList.add("past-day");
+  }
+
+  if (dateStr === selectedDate) {
+    dayEl.classList.add("selected");
+  }
+
+  // Only allow clicks on non-past dates
+  if (!isPast) {
+    dayEl.addEventListener("click", () => selectDate(dateStr));
+  }
+
+  daysContainer.appendChild(dayEl);
+}
 }
 
 function getEventDatesForMonth(year, month) {
@@ -160,6 +167,7 @@ function getEventDatesForMonth(year, month) {
 }
 
 function selectDate(dateStr) {
+  if (isPastDate(dateStr)) return;
   selectedDate = dateStr;
   const date = parseLocalDate(dateStr);
 
