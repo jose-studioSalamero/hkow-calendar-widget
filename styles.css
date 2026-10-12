@@ -127,15 +127,9 @@ body {
   background-color: rgba(0, 0, 0, 0.04);
 }
 
-.calendar-day.empty {
+.calendar-day.empty,
+.calendar-day.past {
   cursor: default;
-  background: transparent;
-}
-
-/* ===== Past date ===== */
-.calendar-day.past-day {
-  background: rgba(255, 255, 255, 0.50);
-  color: #7A7A7A;
 }
 
 /* ===== Today ===== */
