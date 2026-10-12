@@ -79,22 +79,30 @@ function renderCalendar() {
     dayEl.dataset.date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
     const dateStr = dayEl.dataset.date;
-    if (eventDates.start.has(dateStr)) {
+    const isPastDay = dateStr < todayStr;
+    const isToday = dateStr === todayStr;
+
+    if (!isPastDay && eventDates.start.has(dateStr)) {
       dayEl.classList.add("has-event");
-    } else if (eventDates.range.has(dateStr)) {
+    } else if (!isPastDay && eventDates.range.has(dateStr)) {
       dayEl.classList.add("has-event-range");
     }
 
-    // Compare date strings instead of date objects
-    if (dateStr === todayStr) {
+    if (isPastDay) {
+      dayEl.classList.add("past-day");
+      dayEl.style.cursor = "not-allowed";
+      dayEl.style.pointerEvents = "none";
+    } else {
+      dayEl.addEventListener("click", () => selectDate(dateStr));
+    }
+
+    if (isToday) {
       dayEl.classList.add("today");
     }
 
     if (dateStr === selectedDate) {
       dayEl.classList.add("selected");
     }
-
-    dayEl.addEventListener("click", () => selectDate(dateStr));
 
     daysContainer.appendChild(dayEl);
   }
@@ -142,6 +150,10 @@ function getEventDatesForMonth(year, month) {
 }
 
 function selectDate(dateStr) {
+  if (dateStr < toDateKey(new Date())) {
+    return;
+  }
+
   selectedDate = dateStr;
   const date = parseLocalDate(dateStr);
 
