@@ -306,7 +306,6 @@ body {
   }
 
   .calendar-grid {
-    gap: 2px 4px;
     flex-shrink: 0;
   }
 
@@ -316,12 +315,6 @@ body {
   }
 
   .calendar-day {
-    width: 36px;
-    height: 36px;
-    max-width: 36px;
-    max-height: 36px;
-    aspect-ratio: auto;
-    margin: 0 auto;
     font-size: 13px;
   }
 
