@@ -170,7 +170,6 @@ function selectDate(dateStr) {
   if (isPastDate(dateStr)) return;
   selectedDate = dateStr;
   const date = parseLocalDate(dateStr);
-
   document.querySelectorAll(".calendar-day.selected").forEach((el) => {
     el.classList.remove("selected");
   });
