@@ -227,6 +227,11 @@ body {
   border: 1px solid #e5e7eb;
 }
 
+.event-card:hover {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  transform: translateY(-2px);
+}
+
 .event-image {
   width: 100%;
   height: 200px;
