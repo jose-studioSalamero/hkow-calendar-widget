@@ -224,6 +224,7 @@ body {
   background: #f9fafb;
   border-radius: 12px;
   padding: 1.5rem;
+  transition: all 0.2s;
   border: 1px solid #e5e7eb;
 }
 
