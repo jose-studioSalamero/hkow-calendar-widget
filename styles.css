@@ -273,6 +273,7 @@ body {
   -moz-appearance: none;
   border-radius: 0;
   outline: none;
+  border: none;
 }
 
 .event-btn-primary {
