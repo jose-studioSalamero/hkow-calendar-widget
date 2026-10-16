@@ -45,10 +45,6 @@ body {
   align-items: center;
   margin-bottom: 1rem;                      /* was: 40px */
   flex-shrink: 0;
-}
-
-.calendar-header h2 {
-  font-size: 14px;
   font-weight: 600;
   color: #111827;
 }
