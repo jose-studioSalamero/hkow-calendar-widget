@@ -275,3 +275,18 @@ function setupEventListeners() {
 }
 
 init();
+
+function sendHeight() {
+  const height = document.documentElement.scrollHeight;
+  window.parent.postMessage({ type: 'calendar-height', height }, '*');
+}
+
+// Send on load and whenever content changes size
+window.addEventListener('load', sendHeight);
+window.addEventListener('resize', sendHeight);
+
+// If the calendar content can change dynamically (e.g. switching months, 
+// loading events async), also call sendHeight() after those updates,
+// or use a ResizeObserver for safety:
+const resizeObserver = new ResizeObserver(() => sendHeight());
+resizeObserver.observe(document.body);
