@@ -39,26 +39,64 @@ function isPastDate(dateStr, todayStr = getHKTDateKey()) {
   return dateStr < todayStr;
 }
 
+// Prevent the "infinite growth" bug: if any CSS in this page ties html/body
+// sizing to the viewport (height:100%, 100vh, min-height:100vh, etc.), then
+// every time the parent resizes the iframe in response to our reported
+// height, the body itself grows too — which triggers another (larger)
+// height report, which grows the iframe again, forever. We neutralize that
+// feedback loop by forcing html/body to size to their natural content.
+function neutralizeViewportSizing() {
+  const style = document.createElement("style");
+  style.textContent = `
+    html, body {
+      height: auto !important;
+      min-height: 0 !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 // NEW: Auto-report height to parent whenever content size changes
 function setupAutoResize() {
   if (!window.parent || window.parent === window) return;
 
-  const sendHeight = () => {
-    const height = document.body.scrollHeight;
+  neutralizeViewportSizing();
+
+  let lastHeight = 0;
+  let rafId = null;
+
+  function measureHeight() {
+    return Math.max(
+      document.documentElement.scrollHeight,
+      document.body ? document.body.scrollHeight : 0,
+    );
+  }
+
+  function sendHeight() {
+    const height = measureHeight();
+    // Ignore tiny/no-op changes so we don't spam postMessage or create loops
+    if (Math.abs(height - lastHeight) < 2) return;
+    lastHeight = height;
     window.parent.postMessage({ type: "RESIZE", height }, "*");
-  };
+  }
+
+  function scheduleSendHeight() {
+    if (rafId) return;
+    rafId = requestAnimationFrame(() => {
+      rafId = null;
+      sendHeight();
+    });
+  }
 
   // Fire once immediately
-  sendHeight();
+  scheduleSendHeight();
 
   // Fire on any size change (new events, images loading, view switching, etc.)
-  const resizeObserver = new ResizeObserver(() => {
-    sendHeight();
-  });
-  resizeObserver.observe(document.body);
+  const resizeObserver = new ResizeObserver(scheduleSendHeight);
+  resizeObserver.observe(document.documentElement);
 
   // Also catch window resizes (e.g. rotating device, Webflow breakpoint changes)
-  window.addEventListener("resize", sendHeight);
+  window.addEventListener("resize", scheduleSendHeight);
 }
 
 // Initialize
