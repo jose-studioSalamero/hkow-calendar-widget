@@ -23,7 +23,6 @@ body {
   height: 100%;
   margin: 0;
   background: white;
-  overflow: hidden;
   display: grid;
   grid-template-columns: 1fr;
   /* was: 1fr 1fr */
@@ -102,7 +101,7 @@ body {
 /* ===== Base day cell (future dates) ===== */
 .calendar-day {
   aspect-ratio: 1 / 1;
-  border-radius: 100%;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -117,7 +116,6 @@ body {
   font-style: normal;
   line-height: normal;
   text-transform: uppercase;
-  border-radius: 0;
   transition: background-color 0.2s;
 }
 
@@ -142,6 +140,7 @@ body {
   font-weight: 500;
   line-height: normal;
   text-transform: uppercase;
+  border-radius: 50%;
 }
 
 /* no hover state needed since pointer-events: none,
@@ -155,7 +154,7 @@ body {
   background-color: #fff;
   color: rgb(231, 0, 66);
   font-weight: 500;
-  border-radius: 0;
+  border-radius: 50%;
 }
 
 /* ===== Dates with an event (unselected) ===== */
@@ -163,7 +162,7 @@ body {
   background-color: #fff;
   color: #000;
   font-weight: 500;
-  border-radius: 0;
+  border-radius: 50%;
 }
 
 .calendar-day.has-event:hover {
@@ -175,7 +174,7 @@ body {
   background-color: rgb(231, 0, 66);
   color: #FFF;
   font-weight: 500;
-  border-radius: 0;
+  border-radius: 50%;
 }
 
 .calendar-day.selected:hover {
@@ -185,7 +184,7 @@ body {
 .calendar-day.has-event-range {
   background-color: #fecdd3;
   color: #be123c;
-  border-radius: 0;
+  border-radius: 50%;
 }
 
 /* Past dates always render muted, even if they have events */
@@ -195,6 +194,7 @@ body {
   color: #7A7A7A;
   cursor: default;
   pointer-events: none;
+  border-radius: 50%;
 }
 
 /* Events Section */
