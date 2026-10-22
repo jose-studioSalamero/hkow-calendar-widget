@@ -103,17 +103,14 @@ function setupAutoResize() {
 async function init() {
   renderCalendar();
   setupEventListeners();
-  setupMessageListener();
-  selectDate(getTodayDateStr());
+  selectDate(getHKTDateKey());   // was the undefined getTodayDateStr()
   await fetchEvents();
   renderCalendar();
   if (selectedDate) {
     selectDate(selectedDate);
   }
 
-  startTimeChecker();
-  startAutoRefresh();
-  setupAutoResize(); // NEW — put this last, after first render
+  setupAutoResize(); // now actually runs
 }
 
 // Fetch events from Google Sheets (via API)
