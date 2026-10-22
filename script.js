@@ -56,76 +56,64 @@ function neutralizeViewportSizing() {
   document.head.appendChild(style);
 }
 
-// NEW: Auto-report height to parent whenever content size changes
-function setupAutoResize() {
-  if (!window.parent || window.parent === window) return;
+// ── Auto height-sync with parent (replaces old notifyParentOfHeight calls) ──
 
-  neutralizeViewportSizing();
+let lastReportedHeight = 0;
+let resizeRafId = null;
 
-  let lastHeight = 0;
-  let rafId = null;
-
-  function measureHeight() {
-    return Math.max(
-      document.documentElement.scrollHeight,
-      document.body ? document.body.scrollHeight : 0,
-    );
-  }
-
-  function sendHeight() {
-    const height = measureHeight();
-    // Ignore tiny/no-op changes so we don't spam postMessage or create loops
-    if (Math.abs(height - lastHeight) < 2) return;
-    lastHeight = height;
-    window.parent.postMessage({ type: "RESIZE", height }, "*");
-  }
-
-  function scheduleSendHeight() {
-    if (rafId) return;
-    rafId = requestAnimationFrame(() => {
-      rafId = null;
-      sendHeight();
-    });
-  }
-
-  // Fire once immediately
-  scheduleSendHeight();
-
-  // Fire on any size change (new events, images loading, view switching, etc.)
-  const resizeObserver = new ResizeObserver(scheduleSendHeight);
-  resizeObserver.observe(document.documentElement);
-
-  // Also catch window resizes (e.g. rotating device, Webflow breakpoint changes)
-  window.addEventListener("resize", scheduleSendHeight);
-}
-
-function sendHeightToParent() {
-  const height = document.documentElement.scrollHeight;
-  window.parent.postMessage(
-    { type: 'hkow-calendar-resize', height: height },
-    '*' // or lock to your Webflow domain for security: 'https://hkow.webflow.io'
+function measureHeight() {
+  return Math.max(
+    document.documentElement.scrollHeight,
+    document.body ? document.body.scrollHeight : 0
   );
 }
 
-// Fire on load
-window.addEventListener('load', sendHeightToParent);
+function notifyParentOfHeight() {
+  if (!window.parent || window.parent === window) return;
+  const height = measureHeight();
+  if (Math.abs(height - lastReportedHeight) < 2) return; // avoid spam/loops
+  lastReportedHeight = height;
+  window.parent.postMessage({ type: "RESIZE", height }, "*");
+}
 
-// Fire whenever content changes size (month nav, day selection, events render, etc.)
-const resizeObserver = new ResizeObserver(() => {
-  sendHeightToParent();
-});
-resizeObserver.observe(document.body);
+function scheduleHeightNotify() {
+  if (resizeRafId) return;
+  resizeRafId = requestAnimationFrame(() => {
+    resizeRafId = null;
+    notifyParentOfHeight();
+  });
+}
 
-// Also fire on window resize (orientation change, etc.)
-window.addEventListener('resize', sendHeightToParent);
+function setupAutoResize() {
+  if (!window.parent || window.parent === window) return;
 
-// Initialize
+  // Neutralize any viewport-based sizing so html/body hug their content
+  const style = document.createElement("style");
+  style.textContent = `html, body { height: auto !important; min-height: 0 !important; }`;
+  document.head.appendChild(style);
+
+  scheduleHeightNotify();
+
+  const resizeObserver = new ResizeObserver(scheduleHeightNotify);
+  resizeObserver.observe(document.documentElement);
+
+  window.addEventListener("resize", scheduleHeightNotify);
+}
+
 async function init() {
-  await fetchEvents();
   renderCalendar();
   setupEventListeners();
-  selectDate(getHKTDateKey());
-  setupAutoResize(); // NEW
+  setupMessageListener();
+  selectDate(getTodayDateStr());
+  await fetchEvents();
+  renderCalendar();
+  if (selectedDate) {
+    selectDate(selectedDate);
+  }
+
+  startTimeChecker();
+  startAutoRefresh();
+  setupAutoResize(); // NEW — put this last, after first render
 }
 
 // Fetch events from Google Sheets (via API)
