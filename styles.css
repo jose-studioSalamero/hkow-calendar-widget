@@ -290,6 +290,7 @@ body {
   border-radius: 0;
   outline: none;
   border: none;
+  pointer-event: cursor;
 }
 
 .event-btn-primary {
