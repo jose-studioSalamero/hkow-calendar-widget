@@ -39,12 +39,35 @@ function isPastDate(dateStr, todayStr = getHKTDateKey()) {
   return dateStr < todayStr;
 }
 
+// NEW: Auto-report height to parent whenever content size changes
+function setupAutoResize() {
+  if (!window.parent || window.parent === window) return;
+
+  const sendHeight = () => {
+    const height = document.body.scrollHeight;
+    window.parent.postMessage({ type: "RESIZE", height }, "*");
+  };
+
+  // Fire once immediately
+  sendHeight();
+
+  // Fire on any size change (new events, images loading, view switching, etc.)
+  const resizeObserver = new ResizeObserver(() => {
+    sendHeight();
+  });
+  resizeObserver.observe(document.body);
+
+  // Also catch window resizes (e.g. rotating device, Webflow breakpoint changes)
+  window.addEventListener("resize", sendHeight);
+}
+
 // Initialize
 async function init() {
   await fetchEvents();
   renderCalendar();
   setupEventListeners();
   selectDate(getHKTDateKey());
+  setupAutoResize(); // NEW
 }
 
 // Fetch events from Google Sheets (via API)
@@ -88,41 +111,41 @@ function renderCalendar() {
     daysContainer.appendChild(emptyDay);
   }
 
-const todayStr = getHKTDateKey();
+  const todayStr = getHKTDateKey();
 
-for (let day = 1; day <= daysInMonth; day++) {
-  const dayEl = document.createElement("div");
-  dayEl.className = "calendar-day";
-  dayEl.textContent = day;
-  dayEl.dataset.date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dayEl = document.createElement("div");
+    dayEl.className = "calendar-day";
+    dayEl.textContent = day;
+    dayEl.dataset.date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
-  const dateStr = dayEl.dataset.date;
-  const isPast = isPastDate(dateStr, todayStr);
+    const dateStr = dayEl.dataset.date;
+    const isPast = isPastDate(dateStr, todayStr);
 
-  if (eventDates.start.has(dateStr)) {
-    dayEl.classList.add("has-event");
-  } else if (eventDates.range.has(dateStr)) {
-    dayEl.classList.add("has-event-range");
+    if (eventDates.start.has(dateStr)) {
+      dayEl.classList.add("has-event");
+    } else if (eventDates.range.has(dateStr)) {
+      dayEl.classList.add("has-event-range");
+    }
+
+    // Compare date strings instead of date objects
+    if (dateStr === todayStr) {
+      dayEl.classList.add("today");
+    } else if (isPast) {
+      dayEl.classList.add("past-day");
+    }
+
+    if (dateStr === selectedDate) {
+      dayEl.classList.add("selected");
+    }
+
+    // Only allow clicks on non-past dates
+    if (!isPast) {
+      dayEl.addEventListener("click", () => selectDate(dateStr));
+    }
+
+    daysContainer.appendChild(dayEl);
   }
-
-  // Compare date strings instead of date objects
-  if (dateStr === todayStr) {
-    dayEl.classList.add("today");
-  } else if (isPast) {
-    dayEl.classList.add("past-day");
-  }
-
-  if (dateStr === selectedDate) {
-    dayEl.classList.add("selected");
-  }
-
-  // Only allow clicks on non-past dates
-  if (!isPast) {
-    dayEl.addEventListener("click", () => selectDate(dateStr));
-  }
-
-  daysContainer.appendChild(dayEl);
-}
 }
 
 function getEventDatesForMonth(year, month) {
@@ -275,18 +298,3 @@ function setupEventListeners() {
 }
 
 init();
-
-function sendHeight() {
-  const height = document.documentElement.scrollHeight;
-  window.parent.postMessage({ type: 'calendar-height', height }, '*');
-}
-
-// Send on load and whenever content changes size
-window.addEventListener('load', sendHeight);
-window.addEventListener('resize', sendHeight);
-
-// If the calendar content can change dynamically (e.g. switching months, 
-// loading events async), also call sendHeight() after those updates,
-// or use a ResizeObserver for safety:
-const resizeObserver = new ResizeObserver(() => sendHeight());
-resizeObserver.observe(document.body);
