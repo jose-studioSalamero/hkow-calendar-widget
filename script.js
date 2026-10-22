@@ -99,6 +99,26 @@ function setupAutoResize() {
   window.addEventListener("resize", scheduleSendHeight);
 }
 
+function sendHeightToParent() {
+  const height = document.documentElement.scrollHeight;
+  window.parent.postMessage(
+    { type: 'hkow-calendar-resize', height: height },
+    '*' // or lock to your Webflow domain for security: 'https://hkow.webflow.io'
+  );
+}
+
+// Fire on load
+window.addEventListener('load', sendHeightToParent);
+
+// Fire whenever content changes size (month nav, day selection, events render, etc.)
+const resizeObserver = new ResizeObserver(() => {
+  sendHeightToParent();
+});
+resizeObserver.observe(document.body);
+
+// Also fire on window resize (orientation change, etc.)
+window.addEventListener('resize', sendHeightToParent);
+
 // Initialize
 async function init() {
   await fetchEvents();
