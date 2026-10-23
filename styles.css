@@ -129,8 +129,9 @@ transition: background-color 0.2s;
 }
 
 .calendar-day.empty{
-  background-color:transparent;
-  cursor:default;
+  background-color: transparent;
+  cursor: default;
+  pointer-events:none;
 }
 
 /* ===== Past dates — unclickable ===== */
