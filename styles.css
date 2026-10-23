@@ -128,6 +128,11 @@ text-transform: uppercase;
 transition: background-color 0.2s;
 }
 
+.calendar-day.empty{
+  background-color:transparent;
+  cursor:default;
+}
+
 /* ===== Past dates — unclickable ===== */
 .calendar-day.past-day {
 cursor: default;
